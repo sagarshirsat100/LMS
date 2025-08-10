@@ -2,12 +2,15 @@ import { useState, useEffect, createContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { dummyCourses } from "../assets/assets";
 import humanizeDuration from "humanize-duration";
+import {useAuth, useUser} from '@clerk/clerk-react';
 
 const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "USD";
   const navigate = useNavigate();
+  const { getToken, isLoaded } = useAuth();
+  const {user} = useUser();
 
   const [allCourses, setAllCourses] = useState([]);
   const [isEducator, setIsEducator] = useState(true);
@@ -59,6 +62,22 @@ const AppContextProvider = ({ children }) => {
     fetchUserEnrolledCourses();
   }, []);
 
+  const logToken = async () => {
+    console.log(await getToken());
+  }
+  
+  useEffect(() => {
+  const fetchToken = async () => {
+    const token = await getToken();
+    console.log(token);
+  };
+
+  if (isLoaded) {
+    fetchToken();
+  }
+  }, [isLoaded, getToken]);
+
+
   const value = {
     currency,
     allCourses,
@@ -77,56 +96,3 @@ const AppContextProvider = ({ children }) => {
 };
 
 export { AppContext, AppContextProvider };
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { createContext, useEffect } from "react";
-// import { useState } from "react";
-// import {dummyCourses} from "../assets/assets";
-// import { useNavigate } from "react-router-dom";
-
-// export const AppContext = createContext();
-
-// export const AppContextProvider = (props) => {
-//   const currency = import.meta.env.VITE_CURRENCY || "USD";
-//   const navigate = useNavigate();
-
-//   const [allcourses, setAllCourses] = useState([]);
-//   const [isEducator, setIsEducator] = useState(true);
-
-//   const fetchAllCourses = async () => {
-//     setAllCourses(dummyCourses);
-//   }
-
-//   const calculateRating = () => {
-//     if(course.courseRating.length === 0) return 0;
-//     let totalRating = 0;
-//     course.courseRating.forEach((rating) => {
-//       totalRating += rating.rating;
-//     });
-//     return totalRating / course.courseRating.length;
-//   }
-
-//   useEffect(() => {
-//     fetchAllCourses();
-//   }, []);
-//   const value = {
-//     currency, allcourses, navigate, calculateRating, isEducator, setIsEducator
-//   };
-
-//   return (
-//     <AppContext.Provider value={value}>
-//       {props.children}
-//     </AppContext.Provider>
-//   );
-// };
