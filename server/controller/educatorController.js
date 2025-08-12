@@ -1,8 +1,14 @@
 import { v2 as cloudinary } from "cloudinary";
 import Purchase from "../models/Purchase.js";
+import { clerkClient } from "@clerk/express";
+import { requireAuth } from "@clerk/express";
+import Course from "../models/Course.js";
+
 export const updateRoleToEducator = async (req, res) => {
   try {
     const userId = req.auth.userId;
+    console.log("auth", req.headers.authorization);
+    console.log("userid ",userId);
     await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: {
         role: "educator",
@@ -82,7 +88,7 @@ export const getEnrolledStudentsdata = async (req,res) => {
   try {
     const educator = req.auth.userId
     const courses = await Course.find({educator})
-    const courseIds = course.map(course=> course._id)
+    const courseIds = courses.map(course=> course._id)
     const purchases = await Purchase.find({
       courseId: {$in: courseIds},
       status:'completed',
