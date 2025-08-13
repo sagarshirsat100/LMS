@@ -7,6 +7,7 @@ import humanizeDuration from "humanize-duration";
 import { check } from "prettier";
 import YouTube from "react-youtube";
 import Footer from "../../components/students/Footer";
+import { toast } from "react-toastify";
 
 
 const CourseDetails = () => {
@@ -21,15 +22,56 @@ const CourseDetails = () => {
     calculateChapterTime,
     calculateCourseDuration,
     calculateNoOfLectures,
-    currency
+    currency,
+    backendUrl,
+    userData,
+    getToken
   } = useContext(AppContext);
+
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find((course) => course._id === id);
-    setCourseData(findCourse);
+    try {
+      const {data} = await axios.get(backendUrl+'/api/course/'+id)
+      if(data.success) {
+        setCourseData(data.courseData)
+      }
+      else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+        toast.error(data.message)
+    }
   };
+
+  const enrollCourse = async () => {
+    try {
+      if(!userData) {
+        return toast.warn('Login to Enroll');
+      }
+      if(isAlreadyEnrolled) {
+        return toast.warn('Already enrolled');
+      }
+      const token = await getToken()
+      const {data} = await axios.post(backendUrl + '/api/user/purchase', {courseId:courseData._id},{headers: {Authorization: `Bearer ${token}`}} )
+      if(data.success) {
+        const {session_url} = data
+        window.location.replace(session_url)
+      }
+      else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+        toast.error(data.message)
+    }
+  }
+
   useEffect(() => {
     fetchCourseData();
-  }, [allCourses]);
+  }, []);
+  useEffect(() => {
+    if(userData && courseData) {
+      setIsAlreadyEnrolled(userData.enrolledCourses.includes(CountQueuingStrategy._id))
+    }
+  }, [userData,courseData]);
 
   const toggleSection = (index) => {
     setOpenSection((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -37,7 +79,7 @@ const CourseDetails = () => {
 
   return courseData ? (
     <>
-      <div className="md: md:pt-30 relative flex flex-row flex-col-reverse items-start justify-between gap-10 px-8 pt-20 text-left md:px-36">
+      <div className="md: md:pt-30 relative flex flex-row items-start justify-between gap-10 px-8 pt-20 text-left md:px-36">
         <div className="h-section-height-z-1 absolute left-0 top-0 w-full bg-gradient-to-b from-cyan-100/70"></div>
 
         <div className="z-10 max-w-xl text-gray-500">
@@ -215,7 +257,7 @@ const CourseDetails = () => {
               <p>{calculateNoOfLectures(courseData)} lessons</p>
             </div>
           </div>
-          <button className="mt-4 w-full rounded bg-blue-600 py-3 font-medium text-white md:mt-6">
+          <button onClick={enrollCourse} className="mt-4 w-full rounded bg-blue-600 py-3 font-medium text-white md:mt-6">
             {isAlreadyEnrolled ? "AlreadyEnrolled" : "Enroll Now"}
           </button>
 
