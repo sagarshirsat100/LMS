@@ -61,7 +61,7 @@ const AppContextProvider = ({ children }) => {
       (sum, rating) => sum + rating.rating,
       0,
     );
-    return Math.floor(totalRating / course.courseRating.lengt)h;
+    return Math.floor(totalRating / course.courseRating.lengt);
   };
 
   const calculateChapterTime = (chapter) => {
